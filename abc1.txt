@@ -1,0 +1,40 @@
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from google.colab import files
+
+# Prompt user to upload the CSV file
+uploaded = files.upload()
+
+df = pd.read_csv(next(iter(uploaded)))
+
+x = df.select_dtypes(include='number')
+
+print("Mean, Median, Variance, Standard Deviation:")
+print(x.agg(['mean', 'median', 'var', 'std']))
+print("\nMode:")
+print(x.mode().iloc[0])
+
+x.hist(figsize=(10, 6))
+plt.tight_layout()
+plt.show()
+
+plt.figure(figsize=(8, 5))
+sns.scatterplot(x=x.iloc[:, 0], y=x.iloc[:, 1])
+plt.tight_layout()
+plt.show()
+
+x.plot(figsize=(10, 5))
+plt.tight_layout()
+plt.show()
+
+plt.figure(figsize=(10, 5))
+sns.boxplot(data=x)
+plt.xticks(rotation=20)
+plt.tight_layout()
+plt.show()
+
+plt.figure(figsize=(10, 6))
+sns.heatmap(x.corr(), annot=True, cmap="RdBu_r", fmt=".2f")
+plt.tight_layout()
+plt.show()
