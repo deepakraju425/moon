@@ -1,0 +1,69 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from google.colab import files
+
+# Upload CSV file
+uploaded = files.upload()
+
+
+data = pd.read_csv(next(iter(uploaded)))
+
+print(data.head())
+
+# 1. Calculate Population Mean
+population_mean = data["Performance Index"].mean()
+print("Population Mean:", population_mean)
+
+# 2. Calculate Sample Means for Different Sample Sizes
+sample_sizes = [10, 20, 50, 100, 200, 500, 1000]
+sample_means = []
+
+for n in sample_sizes:
+    sample = data["Performance Index"].sample(n=n, random_state=42)
+    mean = sample.mean()
+    sample_means.append(mean)
+    print("Sample Size:", n, "Sample Mean:", mean)
+
+# 3. Plot Original Distribution
+sns.histplot(data["Performance Index"], kde=True, bins=30)
+plt.title("Original Distribution")
+plt.xlabel("Performance Index")
+plt.show()
+
+# 4. Demonstrate Central Limit Theorem
+sample_means = []
+
+for i in range(1000):
+    sample = data["Performance Index"].sample(n=30, replace=True)
+    sample_means.append(sample.mean())
+
+sns.histplot(sample_means, kde=True, bins=30)
+plt.title("Central Limit Theorem")
+plt.xlabel("Sample Means")
+plt.show()
+
+# 5. Compare Population Mean and Mean of Sample Means
+print("Population Mean:", population_mean)
+print("Mean of Sample Means:", np.mean(sample_means))
+
+# 6. CLT for Different Sample Sizes
+sample_sizes = [5, 10, 30, 50, 100]
+
+plt.figure(figsize=(15, 8))
+
+for i, n in enumerate(sample_sizes):
+    means = []
+
+    for j in range(1000):
+        sample = data["Performance Index"].sample(n=n, replace=True)
+        means.append(sample.mean())
+
+    plt.subplot(2, 3, i + 1)
+    sns.histplot(means, bins=25, kde=True)
+    plt.title("Sample Size = " + str(n))
+
+plt.tight_layout()
+plt.show()
