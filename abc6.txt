@@ -1,0 +1,75 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import statsmodels.api as sm
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+
+from google.colab import files
+uploaded = files.upload()
+
+df = pd.read_csv(next(iter(uploaded)))
+df = df.select_dtypes(include="number").dropna()
+
+# Change these according to your dataset
+target = "Salary"
+X = df.drop(columns=[target])
+y = df[target]
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Multiple Linear Regression
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+pred = model.predict(X_test)
+
+print("MAE:", mean_absolute_error(y_test, pred))
+print("MSE:", mean_squared_error(y_test, pred))
+print("RMSE:", np.sqrt(mean_squared_error(y_test, pred)))
+print("R2 Score:", r2_score(y_test, pred))
+
+# Residual Analysis
+residuals = y_test - pred
+
+plt.scatter(pred, residuals)
+plt.axhline(0, color="red")
+plt.xlabel("Predicted Salary")
+plt.ylabel("Residuals")
+plt.title("Residual Plot")
+plt.show()
+
+sm.qqplot(residuals, line="45")
+plt.title("Q-Q Plot")
+plt.show()
+
+# VIF
+X_vif = sm.add_constant(X)
+vif = pd.DataFrame()
+vif["Feature"] = X_vif.columns
+vif["VIF"] = [
+    variance_inflation_factor(X_vif.values, i)
+    for i in range(X_vif.shape[1])
+]
+print("\nVIF:\n", vif)
+
+# Cook's Distance
+X_train_sm = sm.add_constant(X_train)
+ols_model = sm.OLS(y_train, X_train_sm).fit()
+influence = ols_model.get_influence()
+cooks = influence.cooks_distance[0]
+
+plt.stem(range(len(cooks)), cooks)
+plt.title("Cook's Distance")
+plt.xlabel("Observation")
+plt.ylabel("Cook's Distance")
+plt.show()
+
+print("Potentially influential observations:", np.sum(cooks > 4 / len(cooks)))
