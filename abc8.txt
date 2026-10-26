@@ -1,0 +1,51 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from sklearn.pipeline import Pipeline
+
+from google.colab import files
+uploaded = files.upload()
+df = pd.read_csv(next(iter(uploaded)))
+
+# Convert categorical values into numbers
+df["Extracurricular Activities"] = df["Extracurricular Activities"].map(
+    {"Yes": 1, "No": 0}
+)
+
+# Convert continuous Performance Index into binary classes
+# 0 = Low Performance, 1 = High Performance
+median = df["Performance Index"].median()
+y = (df["Performance Index"] >= median).astype(int)
+
+# Select input features; exclude Performance Index to avoid data leakage
+X = df[[
+    "Hours Studied",
+    "Previous Scores",
+    "Extracurricular Activities",
+    "Sleep Hours",
+    "Sample Question Papers Practiced"
+]]
+
+# Split data: 80% training and 20% testing
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Scale features and train Logistic Regression
+# max_iter=1000 allows sufficient iterations for convergence
+model = Pipeline([
+    ("scaler", StandardScaler()),
+    ("logistic", LogisticRegression(max_iter=1000))
+])
+
+model.fit(X_train, y_train)
+
+# Predict classes for test data
+y_pred = model.predict(X_test)
+
+# Evaluate the model
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
