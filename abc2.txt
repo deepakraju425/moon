@@ -1,0 +1,30 @@
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder, OrdinalEncoder, StandardScaler, MinMaxScaler
+
+# Load the available Student Performance CSV dataset directly
+df = pd.read_csv('/content/Student_Performance.csv')
+
+print("Missing Values:\n", df.isnull().sum())
+print("Duplicate Rows:", df.duplicated().sum())
+
+df = df.dropna().drop_duplicates()
+
+cat = df.select_dtypes(include='object').columns
+
+if len(cat) > 0:
+    df[cat[0]] = LabelEncoder().fit_transform(df[cat[0]])
+
+if len(cat) > 1:
+    df[[cat[1]]] = OrdinalEncoder().fit_transform(df[[cat[1]]])
+
+num = df.select_dtypes(include='number').columns
+
+print("\nStandardScaler:\n", StandardScaler().fit_transform(df[num])[:5])
+print("\nMinMaxScaler:\n", MinMaxScaler().fit_transform(df[num])[:5])
+
+for c in num:
+    q1, q3 = df[c].quantile([0.25, 0.75])
+    iqr = q3 - q1
+    print(c, "Outliers:", ((df[c] < q1-1.5*iqr) | (df[c] > q3+1.5*iqr)).sum())
+
+print("\nPreprocessed Data:\n", df.head())
