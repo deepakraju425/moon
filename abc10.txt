@@ -1,0 +1,42 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+df = pd.read_csv(next(iter(uploaded)))
+
+# Convert Yes/No into 1/0
+df["Extracurricular Activities"] = df["Extracurricular Activities"].map(
+    {"Yes": 1, "No": 0}
+)
+
+# Create target: 0 = Low Performance, 1 = High Performance
+median = df["Performance Index"].median()
+y = (df["Performance Index"] >= median).astype(int)
+
+# Select input features
+X = df[[
+    "Hours Studied",
+    "Previous Scores",
+    "Extracurricular Activities",
+    "Sleep Hours",
+    "Sample Question Papers Practiced"
+]]
+
+# Split data into 80% training and 20% testing
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# max_depth=5 limits tree depth to reduce overfitting
+# random_state=42 makes the result reproducible
+model = DecisionTreeClassifier(max_depth=5, random_state=42)
+model.fit(X_train, y_train)
+
+# Predict classes for test data
+y_pred = model.predict(X_test)
+
+# Evaluate the model
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
